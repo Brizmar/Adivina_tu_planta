@@ -16,26 +16,59 @@ def cargar_datos(nombre_archivo):
         return json.load(archivo)
 
 # Mostrar imagen en una ventana emergente
-def mostrar_imagen(imagen_nombre):
-    # Añadimos la extensión '.jpg' al nombre de la imagen.
-    ruta = os.path.join("..", "img", f"{imagen_nombre.lower()}.png")
-    print(f"Ruta completa de la imagen: {ruta}")
+def mostrar_imagen(nombre):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    ruta = os.path.join(base_dir, "..", "img", f"{nombre.lower()}.png")
+
+    print("Ruta completa de la imagen:", ruta)
+    print("Archivo existe:", os.path.exists(ruta))
 
     if os.path.exists(ruta):
+        # Creamos una nueva ventana
         ventana = tk.Toplevel()
-        ventana.title(f"Tu planta ideal")
+        ventana.title(f"Tu planta ideal: {nombre}")
 
-        # Cargamos y redimensionamos la imagen.
-        imagen = Image.open(ruta)
-        imagen = imagen.resize((250, 250))  # Cambié de 'Image.resize()' a 'imagen.resize()'
-        imagen_tk = ImageTk.PhotoImage(imagen)
+        try:
+            imagen = Image.open(ruta)
+            imagen = imagen.resize((250, 250), Image.Resampling.LANCZOS)
+            imagen_tk = ImageTk.PhotoImage(imagen)
 
-        etiqueta = tk.Label(ventana, image=imagen_tk)
-        etiqueta.image = imagen_tk  # Evita que se pierda la referencia de la imagen
-        etiqueta.pack()
+            etiqueta = tk.Label(ventana, image=imagen_tk)
+            etiqueta.image = imagen_tk  # evita que se borre por el recolector
+            etiqueta.pack()
 
+            ventana.grab_set()  # fuerza a que interactúes con esa ventana
+            ventana.wait_window()  # espera a que se cierre antes de seguir
+        except Exception as e:
+            print("Error al mostrar imagen:", e)
+            messagebox.showerror("Error", f"No se pudo mostrar la imagen: {e}")
+
+# Esta función te da la ruta absoluta basada en donde está tu script
+def ruta_relativa(desde, archivo):
+    ruta_base = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(ruta_base, desde, archivo)
+
+def agregar_nueva_planta(nombre, respuestas, archivo_relativo="../data/plantas.json"):
+    ruta_archivo = ruta_relativa("", archivo_relativo)  # "" si plantas.json ya está en data/
+
+    nueva_planta = {"nombre": nombre}
+    nueva_planta.update(respuestas)
+
+    if os.path.exists(ruta_archivo):
+        with open(ruta_archivo, "r", encoding="utf-8") as f:
+            try:
+                plantas = json.load(f)
+            except json.JSONDecodeError:
+                plantas = []
     else:
-        messagebox.showinfo("Imagen no encontrada", f"No hay imagen para {imagen_nombre}.")
+        plantas = []
+
+    plantas.append(nueva_planta)
+
+    with open(ruta_archivo, "w", encoding="utf-8") as f:
+        json.dump(plantas, f, indent=4, ensure_ascii=False)
+
+    print(f"✅ Planta agregada a: {ruta_archivo}")
 
 # Motor de inferencia simple
 def obtener_recomendacion(plantas, respuestas):
@@ -80,6 +113,13 @@ def main():
         mostrar_imagen(resultado["nombre"])
     else:
         messagebox.showinfo("Sin resultados", "No se encontró una planta con esas características.")
-
+        
+        agregar = messagebox.askyesno("Agregar planta", "¿Deseas agregar una nueva planta con estas características?")
+        if agregar:
+            nombre = simpledialog.askstring("Nueva planta", "Escribe el nombre de la nueva planta:")
+            if nombre:
+                agregar_nueva_planta(nombre, respuestas)
+                messagebox.showinfo("Guardado", f"La planta '{nombre}' fue agregada.")
+                
 if __name__ == "__main__":
     main()
