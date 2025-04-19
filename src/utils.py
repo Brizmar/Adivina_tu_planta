@@ -29,3 +29,28 @@ def cargar_json(nombre_archivo):
     except FileNotFoundError:
         print(f"Archivo {nombre_archivo} no encontrado.")
         return []
+
+def agregar_nueva_planta(respuestas, ruta_archivo="data/plantas.json"):
+    nombre = input("Ingrese el nombre de la nueva planta: ")
+    imagen = input("Ingrese el nombre del archivo de imagen (e.g., 'nueva_planta.png'): ")
+
+    nueva_planta = respuestas.copy()
+    nueva_planta["nombre"] = nombre
+    nueva_planta["imagen"] = imagen
+
+    # Verificar si el archivo existe
+    if os.path.exists(ruta_archivo):
+        with open(ruta_archivo, "r", encoding="utf-8") as archivo:
+            try:
+                plantas = json.load(archivo)
+            except json.JSONDecodeError:
+                plantas = []
+    else:
+        plantas = []
+
+    plantas.append(nueva_planta)
+
+    with open(ruta_archivo, "w", encoding="utf-8") as archivo:
+        json.dump(plantas, archivo, indent=4, ensure_ascii=False)
+
+    print(f"La planta '{nombre}' ha sido agregada exitosamente.")

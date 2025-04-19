@@ -1,7 +1,7 @@
 import pygame
 import sys
 from diseño import Boton, BLANCO, NEGRO, obtener_fuentes
-from utils import cargar_sonido, cargar_imagen, cargar_json
+from utils import cargar_sonido, cargar_imagen, cargar_json, agregar_nueva_planta
 
 # Inicialización de Pygame
 pygame.init()
@@ -89,6 +89,9 @@ def mostrar_resultado():
         mensaje = "No se encontró una planta que coincida con tus preferencias."
         texto = FUENTE_NORMAL.render(mensaje, True, NEGRO)
         pantalla.blit(texto, texto.get_rect(center=(ANCHO // 2, ALTO // 2)))
+        pygame.display.flip()
+        pygame.time.wait(2000)  # Esperar 2 segundos antes de solicitar entrada
+        agregar_nueva_planta(respuestas)
 
 # Configuración del botón de inicio
 boton_iniciar = Boton(
