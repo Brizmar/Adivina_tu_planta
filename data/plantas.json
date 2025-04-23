@@ -138,5 +138,19 @@
         "beneficio": "culinaria",
         "crecimiento": "rápido",
         "imagen": "albahaca.png"
+    },
+    {
+        "nombre": "Poto",
+        "riego": "frecuente",
+        "luz": "indirecta",
+        "tamaño": "mediano",
+        "dificultad": "fácil",
+        "tipo": "interior",
+        "ambiente": "húmedo",
+        "floración": "no",
+        "olor": "sin olor",
+        "beneficio": "purificadora de aire",
+        "crecimiento": "rápido",
+        "imagen": "poto.png"
     }
 ]

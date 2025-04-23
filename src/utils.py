@@ -1,6 +1,7 @@
 import os
 import json
 import pygame
+import sys
 
 def cargar_sonido(nombre_archivo):
     ruta = os.path.join("sounds", nombre_archivo)
@@ -30,27 +31,32 @@ def cargar_json(nombre_archivo):
         print(f"Archivo {nombre_archivo} no encontrado.")
         return []
 
-def agregar_nueva_planta(respuestas, ruta_archivo="data/plantas.json"):
-    nombre = input("Ingrese el nombre de la nueva planta: ")
-    imagen = input("Ingrese el nombre del archivo de imagen (e.g., 'nueva_planta.png'): ")
+def agregar_nueva_planta(respuestas, nombre, imagen, ruta_archivo="data/preguntas.json"):
+    # Construir ruta absoluta al JSON dentro de 'data'
+    ruta = os.path.join("data", os.path.basename(ruta_archivo))
 
+    # Preparar el nuevo objeto planta
     nueva_planta = respuestas.copy()
     nueva_planta["nombre"] = nombre
     nueva_planta["imagen"] = imagen
 
-    # Verificar si el archivo existe
-    if os.path.exists(ruta_archivo):
-        with open(ruta_archivo, "r", encoding="utf-8") as archivo:
+    # Cargar las plantas existentes
+    if os.path.exists(ruta):
+        with open(ruta, "r", encoding="utf-8") as f:
             try:
-                plantas = json.load(archivo)
+                plantas = json.load(f)
             except json.JSONDecodeError:
                 plantas = []
     else:
         plantas = []
 
+    # Agregar y guardar
     plantas.append(nueva_planta)
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump(plantas, f, indent=4, ensure_ascii=False)
 
-    with open(ruta_archivo, "w", encoding="utf-8") as archivo:
-        json.dump(plantas, archivo, indent=4, ensure_ascii=False)
+    print(f"La planta '{nombre}' ha sido agregada exitosamente en {ruta}.")
 
-    print(f"La planta '{nombre}' ha sido agregada exitosamente.")
+def salir_juego():
+    pygame.quit()  # Finaliza todos los módulos de Pygame
+    sys.exit()     # Termina el programa

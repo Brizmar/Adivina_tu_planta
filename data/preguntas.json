@@ -1,52 +1,106 @@
 [
     {
         "atributo": "tipo",
-        "pregunta": "¿Buscas una planta para interior, exterior o que sirva para ambos?",
-        "opciones": ["interior", "exterior", "ambas"]
+        "pregunta": "¿Tu planta es para interior, exterior o ambas?",
+        "opciones": [
+            "interior",
+            "exterior",
+            "ambas"
+        ]
     },
     {
         "atributo": "ambiente",
         "pregunta": "¿En qué tipo de ambiente vives?",
-        "opciones": ["seco", "húmedo", "templado"]
+        "opciones": [
+            "seco",
+            "húmedo",
+            "templado"
+        ]
     },
     {
         "atributo": "floración",
         "pregunta": "¿Quieres que tu planta tenga flores?",
-        "opciones": ["sí", "no"]
+        "opciones": [
+            "sí",
+            "no"
+        ]
     },
     {
         "atributo": "olor",
         "pregunta": "¿Prefieres una planta con olor, sin olor o neutra?",
-        "opciones": ["aromática", "neutra", "sin olor"]
+        "opciones": [
+            "aromática",
+            "neutra",
+            "sin olor"
+        ]
     },
     {
         "atributo": "beneficio",
         "pregunta": "¿Qué beneficio prefieres que tenga tu planta?",
-        "opciones": ["decorativa", "medicinal", "purificadora de aire", "repelente de insectos", "culinaria"]
+        "opciones": [
+            "decorativa",
+            "medicinal",
+            "purificadora de aire",
+            "repelente de insectos",
+            "culinaria"
+        ]
     },
     {
         "atributo": "crecimiento",
         "pregunta": "¿Prefieres una planta que crezca rápido, medio o lento?",
-        "opciones": ["rápido", "medio", "lento"]
+        "opciones": [
+            "rápido",
+            "medio",
+            "lento"
+        ]
     },
     {
         "atributo": "riego",
         "pregunta": "¿Con qué frecuencia estás dispuesto a regar la planta?",
-        "opciones": ["muy poco", "poco", "moderado", "frecuente"]
+        "opciones": [
+            "muy poco",
+            "poco",
+            "moderado",
+            "frecuente"
+        ]
     },
     {
         "atributo": "luz",
         "pregunta": "¿Qué tipo de luz tiene el lugar donde colocarás la planta?",
-        "opciones": ["directa", "indirecta"]
+        "opciones": [
+            "directa",
+            "indirecta"
+        ]
     },
     {
         "atributo": "tamaño",
         "pregunta": "¿Qué tamaño prefieres para la planta?",
-        "opciones": ["pequeño", "mediano"]
+        "opciones": [
+            "pequeño",
+            "mediano"
+        ]
     },
     {
         "atributo": "dificultad",
         "pregunta": "¿Qué nivel de dificultad en el cuidado estás dispuesto a asumir?",
-        "opciones": ["fácil", "media", "difícil"]
+        "opciones": [
+            "fácil",
+            "media",
+            "difícil"
+        ]
+    },
+    {
+        "tipo": "exterior",
+        "ambiente": "húmedo",
+        "floración": "no",
+        "olor": "neutra",
+        "beneficio": "medicinal",
+        "crecimiento": "medio",
+        "riego": "poco",
+        "luz": "indirecta",
+        "tamaño": "mediano",
+        "dificultad": "media",
+        "nombre": "Jesus",
+        "imagen": "jesus.png"
     }
 ]
