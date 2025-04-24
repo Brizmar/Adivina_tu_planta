@@ -69,3 +69,39 @@ class InputBox:
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Dibujar el rectángulo del cuadro de entrada
         pygame.draw.rect(screen, self.color, self.rect, 2)
+
+# Escala de grises para una imagen
+def imagen_a_grises(imagen):
+    arr = pygame.surfarray.array3d(imagen)
+    gris = arr.mean(axis=2).astype('uint8')
+    arr[:, :, 0] = gris
+    arr[:, :, 1] = gris
+    arr[:, :, 2] = gris
+    return pygame.surfarray.make_surface(arr).convert_alpha()
+
+# Dibujar pregunta
+def dibujar_pregunta(pantalla, texto, fuente, ancho_ventana):
+    pregunta_render = fuente.render(texto, True, VERDE)
+    rect_pregunta = pregunta_render.get_rect(center=(ancho_ventana // 2, 60))
+    pygame.draw.rect(pantalla, (200, 255, 200), rect_pregunta.inflate(40, 20), border_radius=12)
+    pantalla.blit(pregunta_render, rect_pregunta)
+
+# Dibujar cuadrícula de plantas
+def dibujar_plantas(pantalla, plantas, tachadas, fuente, columnas=4, tamaño=(100, 100), margen=30, offset_y=100):
+    ancho = pantalla.get_width()
+    x_inicio = (ancho - ((tamaño[0] + margen) * columnas - margen)) // 2
+
+    for i, planta in enumerate(plantas):
+        fila = i // columnas
+        col = i % columnas
+        x = x_inicio + col * (tamaño[0] + margen)
+        y = offset_y + fila * (tamaño[1] + 40)
+
+        imagen = planta["imagen"]
+        if planta["nombre"] in tachadas:
+            imagen = imagen_a_grises(imagen)
+        
+        pantalla.blit(imagen, (x, y))
+        texto = fuente.render(planta["nombre"], True, NEGRO)
+        texto_rect = texto.get_rect(center=(x + tamaño[0] // 2, y + tamaño[1] + 15))
+        pantalla.blit(texto, texto_rect)
