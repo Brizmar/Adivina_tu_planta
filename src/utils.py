@@ -31,7 +31,7 @@ def cargar_json(nombre_archivo):
         print(f"Archivo {nombre_archivo} no encontrado.")
         return []
 
-def agregar_nueva_planta(respuestas, nombre, imagen, ruta_archivo="data/preguntas.json"):
+def agregar_nueva_planta(respuestas, nombre, imagen, ruta_archivo="data/plantas.json"):
     # Construir ruta absoluta al JSON dentro de 'data'
     ruta = os.path.join("data", os.path.basename(ruta_archivo))
 

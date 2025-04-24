@@ -88,19 +88,5 @@
             "media",
             "difícil"
         ]
-    },
-    {
-        "tipo": "exterior",
-        "ambiente": "húmedo",
-        "floración": "no",
-        "olor": "neutra",
-        "beneficio": "medicinal",
-        "crecimiento": "medio",
-        "riego": "poco",
-        "luz": "indirecta",
-        "tamaño": "mediano",
-        "dificultad": "media",
-        "nombre": "Jesus",
-        "imagen": "jesus.png"
     }
 ]
