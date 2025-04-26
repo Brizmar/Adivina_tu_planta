@@ -1,7 +1,7 @@
 import pygame
 import numpy
-from utils import cargar_json, cargar_imagen, cargar_sonido, salir_juego
-from diseño import obtener_fuentes, dibujar_pregunta, dibujar_plantas, Boton
+from utils import cargar_json, cargar_imagen, cargar_sonido, salir_juego, agregar_nueva_planta
+from diseño import obtener_fuentes, dibujar_pregunta, dibujar_plantas, Boton, InputBox
 
 pygame.init()
 ANCHO, ALTO = 1000, 700
@@ -65,9 +65,88 @@ def filtrar_plantas(opcion_seleccionada):
         if planta.get(atributo) != opcion_seleccionada:
             tachadas.add(planta["nombre"])
 
+    preguntas[indice_pregunta]["respuesta_usuario"] = opcion_seleccionada  # ← Guarda la respuesta del usuario
     indice_pregunta += 1
-    if indice_pregunta < len(preguntas):
+
+    # Verificamos condiciones de finalización
+    plantas_disponibles = [planta for planta in plantas if planta["nombre"] not in tachadas]
+
+    if not plantas_disponibles:
+        mostrar_pantalla_sin_coincidencias()
+    elif len(plantas_disponibles) == 1:
+        mostrar_pantalla_victoria(plantas_disponibles[0]["nombre"])
+    elif indice_pregunta < len(preguntas):
         actualizar_botones()
+
+
+# -------------------
+# RESULTADOS FINALES
+# -------------------
+def mostrar_pantalla_sin_coincidencias():
+    fuente = fuentes["grande"]
+    fuente_normal = fuentes["normal"]
+    input_box = InputBox(ANCHO//2 - 100, ALTO//2, 200, 50, fuente_normal)
+    agregar = False
+    salir = False
+
+    def confirmar_agregado():
+        nonlocal agregar
+        agregar = True
+
+    def cancelar():
+        salir_juego()
+
+    boton_agregar = Boton(ANCHO//2 - 220, ALTO//2 + 100, 200, 60, "Agregar nueva planta", confirmar_agregado, fuente_normal)
+    boton_salir = Boton(ANCHO//2 + 20, ALTO//2 + 100, 200, 60, "Salir", cancelar, fuente_normal)
+
+    while not (agregar or salir):
+        pantalla.fill((255, 255, 255))
+
+        mensaje = fuente.render("Lo sentimos, no encontramos una planta ideal.", True, (200, 50, 50))
+        pantalla.blit(mensaje, (ANCHO//2 - mensaje.get_width()//2, 150))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                salir_juego()
+            input_box.handle_event(evento)
+            boton_agregar.manejar_evento(evento, None)
+            boton_salir.manejar_evento(evento, None)
+
+        input_box.update()
+        input_box.draw(pantalla)
+        boton_agregar.dibujar(pantalla)
+        boton_salir.dibujar(pantalla)
+
+        pygame.display.flip()
+        reloj.tick(30)
+
+    if agregar:
+        # Crear nueva planta con respuestas dadas
+        nombre = input_box.text.strip()
+        if nombre:
+            respuestas_actuales = {}
+            for i in range(len(preguntas)):
+                atributo = preguntas[i]["atributo"]
+                respuestas_actuales[atributo] = preguntas[i]["respuesta_usuario"]
+            imagen = nombre.lower().replace(" ", "_") + ".png"
+            agregar_nueva_planta(respuestas_actuales, nombre, imagen)
+        salir_juego()
+
+def mostrar_pantalla_victoria(planta_ganadora):
+    fuente = fuentes["grande"]
+    fuente_normal = fuentes["normal"]
+
+    while True:
+        pantalla.fill((255, 255, 255))
+        mensaje = fuente.render(f"¡Tu planta ideal es {planta_ganadora}!", True, (34, 139, 34))
+        pantalla.blit(mensaje, (ANCHO//2 - mensaje.get_width()//2, 200))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                salir_juego()
+
+        pygame.display.flip()
+        reloj.tick(30)
 
 # -------------------
 # BUCLE PRINCIPAL
