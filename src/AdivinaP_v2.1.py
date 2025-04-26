@@ -1,5 +1,6 @@
 import pygame
-from utils import cargar_json, cargar_imagen, salir_juego
+import numpy
+from utils import cargar_json, cargar_imagen, cargar_sonido, salir_juego
 from diseño import obtener_fuentes, dibujar_pregunta, dibujar_plantas, Boton
 
 pygame.init()
@@ -12,6 +13,7 @@ pygame.display.set_caption("Adivina tu planta")
 # -------------------
 preguntas = cargar_json("preguntas.json")
 plantas_raw = cargar_json("plantas.json")
+sonido_click = cargar_sonido("click.wav")
 
 # Agregar imágenes ya cargadas
 plantas = []
@@ -31,7 +33,9 @@ tachadas = set()
 # BOTONES DE OPCIONES
 # -------------------
 def crear_boton_opcion(texto, x, y, ancho, alto, fuente, accion):
-    return Boton(x, y, ancho, alto, texto, accion, fuente)
+    boton = Boton(x, y, ancho, alto, texto, accion, fuente)
+    boton.sonido = sonido_click  # ← Asignar sonido
+    return boton
 
 def generar_botones_opciones(pregunta_actual, fuente):
     opciones = pregunta_actual["opciones"]
@@ -76,26 +80,69 @@ def actualizar_botones():
     if indice_pregunta < len(preguntas):
         botones_opciones = generar_botones_opciones(preguntas[indice_pregunta], fuentes["normal"])
 
-running = True
-while running:
-    pantalla.fill((255, 255, 255))
+# -------------------
+# MENÚ DE INICIO
+# -------------------
+def mostrar_menu_inicio():
+    fuente = fuentes["grande"]
+    jugar = False  # Control de flujo
 
-    for evento in pygame.event.get():
-        if evento.type == pygame.QUIT:
-            salir_juego()
+    def iniciar_juego_local():
+        nonlocal jugar
+        jugar = True
+
+    boton_jugar = Boton(ANCHO // 2 - 220, ALTO // 2, 200, 60, "Jugar", iniciar_juego_local, fuente)
+    boton_jugar.sonido = sonido_click
+
+    boton_salir = Boton(ANCHO // 2 + 20, ALTO // 2, 200, 60, "Salir", salir_juego, fuente)
+    boton_salir.sonido = sonido_click
+
+    while not jugar:
+        pantalla.fill((255, 255, 255))
+        titulo = fuente.render("Adivina tu planta", True, (34, 139, 34))
+        pantalla.blit(titulo, (ANCHO // 2 - titulo.get_width() // 2, 150))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                salir_juego()
+            boton_jugar.manejar_evento(evento, None)
+            boton_salir.manejar_evento(evento, None)
+
+        boton_jugar.dibujar(pantalla)
+        boton_salir.dibujar(pantalla)
+        pygame.display.flip()
+
+    return True  # Cuando se presiona jugar
+
+
+def iniciar_juego():
+    global en_menu
+    en_menu = False
+
+# -------------------
+# INICIO DEL PROGRAMA
+# -------------------
+if mostrar_menu_inicio():
+    running = True
+    while running:
+        pantalla.fill((255, 255, 255))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                salir_juego()
+            for boton in botones_opciones:
+                boton.manejar_evento(evento, None)
+
+        # Dibujar título y pregunta
+        pygame.draw.rect(pantalla, (255, 255, 255), (0, 0, ANCHO, 80))
+        if indice_pregunta < len(preguntas):
+            pregunta_texto = preguntas[indice_pregunta]["pregunta"]
+            dibujar_pregunta(pantalla, pregunta_texto, fuentes["grande"], ANCHO)
+
+        # Dibujar plantas y botones
+        dibujar_plantas(pantalla, plantas, tachadas, fuentes["normal"])
         for boton in botones_opciones:
-            boton.manejar_evento(evento, None)
+            boton.dibujar(pantalla)
 
-    # Dibujar título y pregunta
-    pygame.draw.rect(pantalla, (255, 255, 255), (0, 0, ANCHO, 80))
-    if indice_pregunta < len(preguntas):
-        pregunta_texto = preguntas[indice_pregunta]["pregunta"]
-        dibujar_pregunta(pantalla, pregunta_texto, fuentes["grande"], ANCHO)
-
-    # Dibujar plantas y botones
-    dibujar_plantas(pantalla, plantas, tachadas, fuentes["normal"])
-    for boton in botones_opciones:
-        boton.dibujar(pantalla)
-
-    pygame.display.flip()
-    reloj.tick(60)
+        pygame.display.flip()
+        reloj.tick(60)

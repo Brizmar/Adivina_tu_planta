@@ -27,8 +27,8 @@ class Boton:
     def manejar_evento(self, evento, sonido_click):
         if evento.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(evento.pos):
-                if sonido_click:
-                    sonido_click.play()
+                if hasattr(self, "sonido") and self.sonido:
+                    self.sonido.play()
                 self.accion()
 
 class InputBox:
