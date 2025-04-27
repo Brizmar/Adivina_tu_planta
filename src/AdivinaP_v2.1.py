@@ -68,16 +68,19 @@ def filtrar_plantas(opcion_seleccionada):
     preguntas[indice_pregunta]["respuesta_usuario"] = opcion_seleccionada  # ← Guarda la respuesta del usuario
     indice_pregunta += 1
 
-    # Verificamos condiciones de finalización
-    plantas_disponibles = [planta for planta in plantas if planta["nombre"] not in tachadas]
+    if indice_pregunta >= len(preguntas):
+        # Ya se respondieron todas las preguntas: ahora sí decidir
+        plantas_disponibles = [planta for planta in plantas if planta["nombre"] not in tachadas]
 
-    if not plantas_disponibles:
-        mostrar_pantalla_sin_coincidencias()
-    elif len(plantas_disponibles) == 1:
-        mostrar_pantalla_victoria(plantas_disponibles[0]["nombre"])
-    elif indice_pregunta < len(preguntas):
+        if not plantas_disponibles:
+            mostrar_pantalla_sin_coincidencias()
+        elif len(plantas_disponibles) == 1:
+            mostrar_pantalla_victoria(plantas_disponibles[0]["nombre"])
+        else:
+            mostrar_pantalla_victoria(plantas_disponibles[0]["nombre"])  # ← Puedes ajustar aquí si quieres elegir entre varias
+    else:
+        # Todavía hay preguntas, seguir preguntando
         actualizar_botones()
-
 
 # -------------------
 # RESULTADOS FINALES
