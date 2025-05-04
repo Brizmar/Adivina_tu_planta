@@ -2,6 +2,8 @@ import pygame
 import numpy
 from utils import cargar_json, cargar_imagen, cargar_sonido, salir_juego, agregar_nueva_planta
 from diseño import obtener_fuentes, dibujar_pregunta, dibujar_plantas, Boton, InputBox
+import matplotlib.pyplot as plt
+import networkx as nx
 
 pygame.init()
 ANCHO, ALTO = 1000, 700
@@ -28,6 +30,7 @@ for planta in plantas_raw:
 fuentes = obtener_fuentes()
 indice_pregunta = 0
 tachadas = set()
+historial_razonamiento = []
 
 # -------------------
 # BOTONES DE OPCIONES
@@ -50,38 +53,37 @@ def generar_botones_opciones(pregunta_actual, fuente):
         botones.append(boton)
     return botones
 
-# -------------------
-# FILTRADO DE PLANTAS
-# -------------------
-def filtrar_plantas(opcion_seleccionada):
-    global indice_pregunta, tachadas
-    if indice_pregunta >= len(preguntas):
-        return
+def generar_grafo_razonamiento(nombre_final=None):
+    G = nx.DiGraph()
+    G.add_node("Inicio")
 
-    atributo = preguntas[indice_pregunta]["atributo"]
-    for planta in plantas:
-        if planta["nombre"] in tachadas:
-            continue
-        if planta.get(atributo) != opcion_seleccionada:
-            tachadas.add(planta["nombre"])
+    anterior = "Inicio"
+    for i, (pregunta, respuesta) in enumerate(historial_razonamiento):
+        nodo = f'{pregunta}\n→ {respuesta}'
+        G.add_node(nodo)
+        G.add_edge(anterior, nodo)
+        anterior = nodo
 
-    preguntas[indice_pregunta]["respuesta_usuario"] = opcion_seleccionada  # ← Guarda la respuesta del usuario
-    indice_pregunta += 1
-
-    if indice_pregunta >= len(preguntas):
-        # Ya se respondieron todas las preguntas: ahora sí decidir
-        plantas_disponibles = [planta for planta in plantas if planta["nombre"] not in tachadas]
-
-        if not plantas_disponibles:
-            mostrar_pantalla_sin_coincidencias()
-        elif len(plantas_disponibles) == 1:
-            mostrar_pantalla_victoria(plantas_disponibles[0]["nombre"])
-        else:
-            mostrar_pantalla_victoria(plantas_disponibles[0]["nombre"])  # ← Puedes ajustar aquí si quieres elegir entre varias
+    if nombre_final:
+        resultado = f'Planta sugerida:\n{nombre_final}'
     else:
-        # Todavía hay preguntas, seguir preguntando
-        actualizar_botones()
+        resultado = 'No se encontró planta.\nSe ofreció agregar una nueva.'
 
+    G.add_node(resultado)
+    G.add_edge(anterior, resultado)
+
+    # Dibujo del grafo
+    pos = nx.spring_layout(G, seed=42)  # diseño reproducible
+    plt.figure(figsize=(12, 6))
+    nx.draw(
+        G, pos, with_labels=True, node_color="lightblue", node_size=3000,
+        font_size=9, font_weight='bold', edge_color="gray", arrows=True
+    )
+    plt.title("Razonamiento del sistema", fontsize=14)
+    plt.tight_layout()
+    plt.savefig("grafo_razonamiento.png")
+    plt.close()
+    
 # -------------------
 # RESULTADOS FINALES
 # -------------------
@@ -124,7 +126,6 @@ def mostrar_pantalla_sin_coincidencias():
         reloj.tick(30)
 
     if agregar:
-        # Crear nueva planta con respuestas dadas
         nombre = input_box.text.strip()
         if nombre:
             respuestas_actuales = {}
@@ -139,10 +140,19 @@ def mostrar_pantalla_victoria(planta_ganadora):
     fuente = fuentes["grande"]
     fuente_normal = fuentes["normal"]
 
+    try:
+        grafo_img = pygame.image.load("grafo_razonamiento.png")
+        grafo_img = pygame.transform.scale(grafo_img, (600, 300))  # Redimensionar si es necesario
+    except pygame.error:
+        grafo_img = None
+
     while True:
         pantalla.fill((255, 255, 255))
         mensaje = fuente.render(f"¡Tu planta ideal es {planta_ganadora}!", True, (34, 139, 34))
-        pantalla.blit(mensaje, (ANCHO//2 - mensaje.get_width()//2, 200))
+        pantalla.blit(mensaje, (ANCHO//2 - mensaje.get_width()//2, 100))
+
+        if grafo_img:
+            pantalla.blit(grafo_img, (ANCHO//2 - 300, 200))  # Centrado
 
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -150,6 +160,39 @@ def mostrar_pantalla_victoria(planta_ganadora):
 
         pygame.display.flip()
         reloj.tick(30)
+
+# -------------------
+# FILTRADO DE PLANTAS
+# -------------------
+def filtrar_plantas(opcion_seleccionada):
+    global indice_pregunta, tachadas, historial_razonamiento
+    if indice_pregunta >= len(preguntas):
+        return
+
+    atributo = preguntas[indice_pregunta]["atributo"]
+    pregunta_texto = preguntas[indice_pregunta]["pregunta"]
+    historial_razonamiento.append((pregunta_texto, opcion_seleccionada))
+    for planta in plantas:
+        if planta["nombre"] in tachadas:
+            continue
+        if planta.get(atributo) != opcion_seleccionada:
+            tachadas.add(planta["nombre"])
+
+    preguntas[indice_pregunta]["respuesta_usuario"] = opcion_seleccionada
+    indice_pregunta += 1
+
+    if indice_pregunta >= len(preguntas):
+        plantas_disponibles = [planta for planta in plantas if planta["nombre"] not in tachadas]
+
+        if not plantas_disponibles:
+            generar_grafo_razonamiento()  # ⬅ agrega esta línea
+            mostrar_pantalla_sin_coincidencias()
+        else:
+            nombre = plantas_disponibles[0]["nombre"]
+            generar_grafo_razonamiento(nombre)  # ⬅ agrega esta línea
+            mostrar_pantalla_victoria(nombre)
+    else:
+        actualizar_botones()
 
 # -------------------
 # BUCLE PRINCIPAL
@@ -167,7 +210,7 @@ def actualizar_botones():
 # -------------------
 def mostrar_menu_inicio():
     fuente = fuentes["grande"]
-    jugar = False  # Control de flujo
+    jugar = False
 
     def iniciar_juego_local():
         nonlocal jugar
@@ -194,8 +237,7 @@ def mostrar_menu_inicio():
         boton_salir.dibujar(pantalla)
         pygame.display.flip()
 
-    return True  # Cuando se presiona jugar
-
+    return True
 
 def iniciar_juego():
     global en_menu
@@ -215,13 +257,11 @@ if mostrar_menu_inicio():
             for boton in botones_opciones:
                 boton.manejar_evento(evento, None)
 
-        # Dibujar título y pregunta
         pygame.draw.rect(pantalla, (255, 255, 255), (0, 0, ANCHO, 80))
         if indice_pregunta < len(preguntas):
             pregunta_texto = preguntas[indice_pregunta]["pregunta"]
             dibujar_pregunta(pantalla, pregunta_texto, fuentes["grande"], ANCHO)
 
-        # Dibujar plantas y botones
         dibujar_plantas(pantalla, plantas, tachadas, fuentes["normal"])
         for boton in botones_opciones:
             boton.dibujar(pantalla)
